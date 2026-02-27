@@ -1,13 +1,11 @@
 [build]
-  base = "."
-  command = "pnpm --filter @kanban/client build"
+  command = "pnpm install && pnpm --filter @kanban/client build"
   publish = "apps/client/dist"
 
 [build.environment]
   NODE_VERSION = "20"
   PNPM_VERSION = "9"
 
-# SPA 라우팅 - 모든 경로를 index.html로 리다이렉트
 [[redirects]]
   from = "/*"
   to = "/index.html"

@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuthStore } from '../../stores/authStore';
 import { avatarGradient } from '../../lib/utils';
+import { useRealtimeFriends } from '../../hooks/useRealtimeFriends';
 import {
   getFriends,
   getReceivedRequests,
@@ -28,6 +29,8 @@ export default function FriendPanel({ isOpen, onClose }: FriendPanelProps) {
   const queryClient = useQueryClient();
   const [tab, setTab] = useState<Tab>('friends');
   const [email, setEmail] = useState('');
+
+  useRealtimeFriends();
 
   const { data: friends = [] } = useQuery({
     queryKey: ['friends'],

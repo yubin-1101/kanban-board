@@ -6,6 +6,7 @@ import { getBoards, createBoard, deleteBoard } from '../services/boardApi';
 import { getReceivedInvitations, respondToInvitation } from '../services/memberApi';
 import { getReceivedRequests } from '../services/friendApi';
 import { avatarGradient, boardGradient } from '../lib/utils';
+import { useRealtimeFriends } from '../hooks/useRealtimeFriends';
 import Button from '../components/ui/Button';
 import Modal from '../components/ui/Modal';
 import Input from '../components/ui/Input';
@@ -26,6 +27,8 @@ export default function DashboardPage() {
   const [newTitle, setNewTitle] = useState('');
   const [selectedColor, setSelectedColor] = useState(BOARD_COLORS[0]);
   const [showFriends, setShowFriends] = useState(false);
+
+  useRealtimeFriends();
 
   const { data: boards = [], isLoading } = useQuery({
     queryKey: ['boards'],
@@ -77,7 +80,7 @@ export default function DashboardPage() {
   const profileGrad = avatarGradient(profile?.display_name);
 
   return (
-    <div className="min-h-screen bg-surface-base">
+    <div className="min-h-screen" style={{ background: 'linear-gradient(160deg, #f5f3ff 0%, #f0f9ff 50%, #f0fdf4 100%)' }}>
       {/* Header */}
       <header className="bg-surface-card/90 backdrop-blur-md border-b border-surface-border sticky top-0 z-30">
         <div className="max-w-6xl mx-auto px-6 h-14 flex items-center justify-between">
