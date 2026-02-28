@@ -1,5 +1,6 @@
 import { useRef, useState, useCallback } from 'react';
 import { useCanvasStore } from '../../stores/canvasStore';
+import { useRealtimeDrawing } from '../../hooks/useRealtimeDrawing';
 import DrawingCanvas, { type DrawingCanvasHandle } from '../drawing/DrawingCanvas';
 import CanvasToolbar from './CanvasToolbar';
 import PostItCard from './PostItCard';
@@ -7,6 +8,7 @@ import CanvasListGroup from './CanvasListGroup';
 import type { BoardDetail, Card, ListWithCards } from '@kanban/shared';
 
 interface CanvasBoardProps {
+  boardId: string;
   board: BoardDetail;
   onCreateFreeCard: (title: string, x: number, y: number) => void;
   onCreateListCard: (listId: string, title: string) => void;
@@ -18,6 +20,7 @@ interface CanvasBoardProps {
 }
 
 export default function CanvasBoard({
+  boardId,
   board,
   onCreateFreeCard,
   onCreateListCard,
@@ -32,6 +35,9 @@ export default function CanvasBoard({
   const penColor = useCanvasStore((s) => s.penColor);
   const penWidth = useCanvasStore((s) => s.penWidth);
 
+  // Real-time drawing sync
+  const { onStrokeComplete, onUndoStroke, onClearStrokes } = useRealtimeDrawing(boardId, drawingRef);
+
   const [addingCardAt, setAddingCardAt] = useState<{ x: number; y: number } | null>(null);
   const [newCardTitle, setNewCardTitle] = useState('');
   const [addingList, setAddingList] = useState(false);
@@ -40,13 +46,11 @@ export default function CanvasBoard({
   const freeCards: Card[] = board.free_cards ?? [];
   const lists: ListWithCards[] = board.lists ?? [];
 
-  // Find an empty spot for new elements
   const findEmptySpot = useCallback(() => {
     const occupied = [
       ...freeCards.map((c) => ({ x: c.x_position ?? 0, y: c.y_position ?? 0 })),
       ...lists.map((l) => ({ x: l.x_position ?? 0, y: l.y_position ?? 0 })),
     ];
-
     let x = 100;
     let y = 100;
     let found = false;
@@ -58,10 +62,7 @@ export default function CanvasBoard({
         found = true;
       } else {
         x += 220;
-        if (x > 1600) {
-          x = 100;
-          y += 150;
-        }
+        if (x > 1600) { x = 100; y += 150; }
       }
     }
     return { x, y };
@@ -106,6 +107,9 @@ export default function CanvasBoard({
           externalColor={penColor}
           externalLineWidth={penWidth}
           interactive={isDrawing}
+          onStrokeComplete={onStrokeComplete}
+          onUndoStroke={onUndoStroke}
+          onClearStrokes={onClearStrokes}
         />
       </div>
 
@@ -114,16 +118,9 @@ export default function CanvasBoard({
         className="absolute inset-0 z-20"
         style={{ pointerEvents: isDrawing ? 'none' : 'auto' }}
       >
-        {/* Free-floating PostIt cards */}
         {freeCards.map((card) => (
-          <PostItCard
-            key={card.id}
-            card={card}
-            onMove={onMoveCardCanvas}
-          />
+          <PostItCard key={card.id} card={card} onMove={onMoveCardCanvas} />
         ))}
-
-        {/* List groups */}
         {lists.map((list) => (
           <CanvasListGroup
             key={list.id}
@@ -147,40 +144,23 @@ export default function CanvasBoard({
               value={newCardTitle}
               onChange={(e) => setNewCardTitle(e.target.value)}
               onKeyDown={(e) => {
-                if (e.key === 'Enter' && !e.shiftKey) {
-                  e.preventDefault();
-                  handleConfirmAddCard();
-                }
+                if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleConfirmAddCard(); }
                 if (e.key === 'Escape') setAddingCardAt(null);
               }}
               rows={2}
               autoFocus
             />
             <div className="flex gap-1 mt-2">
-              <button
-                className="px-2 py-1 text-xs font-medium bg-yellow-500 text-white rounded-md hover:bg-yellow-600"
-                onClick={handleConfirmAddCard}
-              >
-                추가
-              </button>
-              <button
-                className="px-2 py-1 text-xs font-medium text-gray-500 hover:text-gray-700"
-                onClick={() => setAddingCardAt(null)}
-              >
-                취소
-              </button>
+              <button className="px-2 py-1 text-xs font-medium bg-yellow-500 text-white rounded-md hover:bg-yellow-600" onClick={handleConfirmAddCard}>추가</button>
+              <button className="px-2 py-1 text-xs font-medium text-gray-500 hover:text-gray-700" onClick={() => setAddingCardAt(null)}>취소</button>
             </div>
           </div>
         )}
       </div>
 
-      {/* z-30: Toolbar (fixed at bottom center) */}
+      {/* z-30: Toolbar */}
       <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-30">
-        <CanvasToolbar
-          drawingRef={drawingRef}
-          onAddCard={handleAddCard}
-          onAddList={handleAddList}
-        />
+        <CanvasToolbar drawingRef={drawingRef} onAddCard={handleAddCard} onAddList={handleAddList} />
       </div>
 
       {/* Add list modal */}
@@ -200,18 +180,8 @@ export default function CanvasBoard({
               autoFocus
             />
             <div className="flex gap-2 mt-3">
-              <button
-                className="px-3 py-1.5 text-sm font-medium bg-accent-500 text-white rounded-lg hover:bg-accent-600"
-                onClick={handleConfirmAddList}
-              >
-                추가
-              </button>
-              <button
-                className="px-3 py-1.5 text-sm font-medium text-ink-secondary hover:text-ink-primary"
-                onClick={() => setAddingList(false)}
-              >
-                취소
-              </button>
+              <button className="px-3 py-1.5 text-sm font-medium bg-accent-500 text-white rounded-lg hover:bg-accent-600" onClick={handleConfirmAddList}>추가</button>
+              <button className="px-3 py-1.5 text-sm font-medium text-ink-secondary hover:text-ink-primary" onClick={() => setAddingList(false)}>취소</button>
             </div>
           </div>
         </div>

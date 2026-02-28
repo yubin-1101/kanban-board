@@ -1,21 +1,13 @@
-import { useEffect, useState } from 'react';
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route, Navigate, Outlet } from 'react-router-dom';
 import { useAuth, useAuthInit } from './hooks/useAuth';
-import { supabase } from './lib/supabase';
 import LoginPage from './pages/LoginPage';
 import DashboardPage from './pages/DashboardPage';
 import BoardPage from './pages/BoardPage';
 
-function ProtectedRoute({ children }: { children: React.ReactNode }) {
+function AuthGate() {
   const { profile, isLoading } = useAuth();
-  const [hasSession, setHasSession] = useState(false);
 
-  useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => {
-      setHasSession(!!data.session);
-    });
-  }, []);
-
+  // 인증 상태 확인 중이면 스피너
   if (isLoading) {
     return (
       <div className="flex h-screen items-center justify-center bg-surface-base">
@@ -24,13 +16,20 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
     );
   }
 
-  // 프로필이 없고 세션도 없으면 로그인으로
-  if (!profile && !hasSession) {
+  // 인증 안 됨 → 로그인
+  if (!profile) {
     return <Navigate to="/login" replace />;
   }
 
-  // 프로필이 없지만 세션이 있으면 (프로필 로딩 중) 스피너 표시
-  if (!profile && hasSession) {
+  // 인증 됨 → 자식 라우트 렌더
+  return <Outlet />;
+}
+
+function PublicRoute({ children }: { children: React.ReactNode }) {
+  const { profile, isLoading } = useAuth();
+
+  // 로딩 중이면 스피너 (깜빡임 방지)
+  if (isLoading) {
     return (
       <div className="flex h-screen items-center justify-center bg-surface-base">
         <div className="h-8 w-8 animate-spin rounded-full border-[2.5px] border-accent-600 border-t-transparent" />
@@ -38,13 +37,8 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
     );
   }
 
-  return <>{children}</>;
-}
-
-function PublicRoute({ children }: { children: React.ReactNode }) {
-  const { profile, isLoading } = useAuth();
-
-  if (!isLoading && profile) {
+  // 이미 로그인 됨 → 대시보드로
+  if (profile) {
     return <Navigate to="/" replace />;
   }
 
@@ -52,28 +46,15 @@ function PublicRoute({ children }: { children: React.ReactNode }) {
 }
 
 export default function App() {
-  // App 레벨에서 한 번만 인증 초기화
   useAuthInit();
 
   return (
     <Routes>
       <Route path="/login" element={<PublicRoute><LoginPage /></PublicRoute>} />
-      <Route
-        path="/"
-        element={
-          <ProtectedRoute>
-            <DashboardPage />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/board/:boardId"
-        element={
-          <ProtectedRoute>
-            <BoardPage />
-          </ProtectedRoute>
-        }
-      />
+      <Route element={<AuthGate />}>
+        <Route path="/" element={<DashboardPage />} />
+        <Route path="/board/:boardId" element={<BoardPage />} />
+      </Route>
       <Route path="*" element={<Navigate to="/login" replace />} />
     </Routes>
   );

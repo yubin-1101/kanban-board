@@ -9,6 +9,7 @@ import commentRoutes from './routes/comment.js';
 import labelRoutes from './routes/label.js';
 import checklistRoutes from './routes/checklist.js';
 import friendRoutes from './routes/friend.js';
+import drawingRoutes from './routes/drawing.js';
 import { errorHandler } from './middleware/errorHandler.js';
 
 dotenv.config();
@@ -28,6 +29,7 @@ app.use('/api/comments', commentRoutes);
 app.use('/api/labels', labelRoutes);
 app.use('/api/checklists', checklistRoutes);
 app.use('/api/friends', friendRoutes);
+app.use('/api/drawings', drawingRoutes);
 
 // Health check
 app.get('/api/health', (_req, res) => {

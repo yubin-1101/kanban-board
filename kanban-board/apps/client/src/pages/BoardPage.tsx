@@ -111,6 +111,7 @@ export default function BoardPage() {
       {/* Canvas Board */}
       <div className="flex-1 relative overflow-hidden">
         <CanvasBoard
+          boardId={boardId!}
           board={board}
           onCreateFreeCard={(title, x, y) => createFreeCard({ title, x, y })}
           onCreateListCard={(listId, title) => createCard({ listId, title })}
