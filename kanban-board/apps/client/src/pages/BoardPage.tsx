@@ -1,25 +1,9 @@
 import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import {
-  DndContext,
-  DragOverlay,
-  closestCorners,
-  KeyboardSensor,
-  PointerSensor,
-  useSensor,
-  useSensors,
-} from '@dnd-kit/core';
-import {
-  SortableContext,
-  horizontalListSortingStrategy,
-  sortableKeyboardCoordinates,
-} from '@dnd-kit/sortable';
 import { useBoard } from '../hooks/useBoard';
 import { useRealtimeBoard } from '../hooks/useRealtimeBoard';
-import { useDragAndDrop } from '../hooks/useDragAndDrop';
 import { boardGradient } from '../lib/utils';
-import ListColumn from '../components/list/ListColumn';
-import CardItem from '../components/card/CardItem';
+import CanvasBoard from '../components/canvas/CanvasBoard';
 import CardDetailModal from '../components/card/CardDetailModal';
 import MemberPanel from '../components/invite/MemberPanel';
 import Button from '../components/ui/Button';
@@ -27,8 +11,6 @@ import Button from '../components/ui/Button';
 export default function BoardPage() {
   const { boardId } = useParams<{ boardId: string }>();
   const navigate = useNavigate();
-  const [isAddingList, setIsAddingList] = useState(false);
-  const [newListTitle, setNewListTitle] = useState('');
   const [showMembers, setShowMembers] = useState(false);
 
   const {
@@ -37,34 +19,14 @@ export default function BoardPage() {
     error,
     createList,
     updateList,
-    moveList,
     deleteList,
     createCard,
-    moveCard,
-    deleteCard,
+    createFreeCard,
+    moveCardCanvas,
+    moveListCanvas,
   } = useBoard(boardId!);
 
   useRealtimeBoard(boardId);
-
-  const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
-    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
-  );
-
-  const {
-    localLists,
-    activeId,
-    activeType,
-    activeCard,
-    activeList,
-    handleDragStart,
-    handleDragOver,
-    handleDragEnd,
-  } = useDragAndDrop({
-    lists: board?.lists ?? [],
-    onMoveCard: moveCard,
-    onMoveList: moveList,
-  });
 
   if (isLoading) {
     return (
@@ -94,15 +56,6 @@ export default function BoardPage() {
     );
   }
 
-  const handleAddList = () => {
-    if (newListTitle.trim()) {
-      createList(newListTitle.trim());
-      setNewListTitle('');
-      setIsAddingList(false);
-    }
-  };
-
-  const listIds = localLists.map((l) => l.id);
   const grad = boardGradient(board.background_color);
 
   return (
@@ -110,7 +63,7 @@ export default function BoardPage() {
       className="h-screen flex flex-col board-bg"
       style={{ background: grad.bg }}
     >
-      {/* Board Header - glassmorphism */}
+      {/* Board Header */}
       <header className="flex items-center justify-between px-5 h-14 bg-black/20 backdrop-blur-xl border-b border-white/10">
         <div className="flex items-center gap-3">
           <button
@@ -155,78 +108,21 @@ export default function BoardPage() {
         </div>
       </header>
 
-      {/* Board Content */}
-      <DndContext
-        sensors={sensors}
-        collisionDetection={closestCorners}
-        onDragStart={handleDragStart}
-        onDragOver={handleDragOver}
-        onDragEnd={handleDragEnd}
-      >
-        <div className="flex-1 overflow-x-auto px-5 py-4 kanban-scrollbar">
-          <div className="flex gap-3.5 items-start h-full">
-            <SortableContext items={listIds} strategy={horizontalListSortingStrategy}>
-              {localLists.map((list) => (
-                <ListColumn
-                  key={list.id}
-                  list={list}
-                  onCreateCard={(listId, title) => createCard({ listId, title })}
-                  onUpdateTitle={(listId, title) => updateList({ listId, title })}
-                  onDelete={deleteList}
-                />
-              ))}
-            </SortableContext>
-
-            {/* Add List */}
-            <div className="flex-shrink-0 w-72">
-              {isAddingList ? (
-                <div className="glass-column rounded-2xl p-3.5 shadow-card border border-white/30 space-y-2.5 animate-fade-in">
-                  <input
-                    className="w-full px-3.5 py-2.5 text-sm border border-surface-border rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-accent-500/30 focus:border-accent-500 placeholder:text-ink-tertiary"
-                    placeholder="리스트 이름을 입력하세요..."
-                    value={newListTitle}
-                    onChange={(e) => setNewListTitle(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter') handleAddList();
-                      if (e.key === 'Escape') setIsAddingList(false);
-                    }}
-                    autoFocus
-                  />
-                  <div className="flex gap-2">
-                    <Button size="sm" onClick={handleAddList}>추가</Button>
-                    <Button size="sm" variant="ghost" onClick={() => setIsAddingList(false)}>취소</Button>
-                  </div>
-                </div>
-              ) : (
-                <button
-                  className="w-full text-left bg-white/10 hover:bg-white/18 backdrop-blur-sm text-white/80 hover:text-white rounded-2xl px-4 py-3 text-sm font-medium transition-all flex items-center gap-2 border border-white/10 hover:border-white/20"
-                  onClick={() => setIsAddingList(true)}
-                >
-                  <svg className="w-4 h-4 opacity-70" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
-                  </svg>
-                  리스트 추가
-                </button>
-              )}
-            </div>
-          </div>
-        </div>
-
-        <DragOverlay>
-          {activeId && activeType === 'card' && activeCard && (
-            <CardItem card={activeCard} isDragOverlay />
-          )}
-          {activeId && activeType === 'list' && activeList && (
-            <ListColumn
-              list={activeList}
-              onCreateCard={() => {}}
-              onUpdateTitle={() => {}}
-              onDelete={() => {}}
-              isDragOverlay
-            />
-          )}
-        </DragOverlay>
-      </DndContext>
+      {/* Canvas Board */}
+      <div className="flex-1 relative overflow-hidden">
+        <CanvasBoard
+          board={board}
+          onCreateFreeCard={(title, x, y) => createFreeCard({ title, x, y })}
+          onCreateListCard={(listId, title) => createCard({ listId, title })}
+          onMoveCardCanvas={(cardId, x, y) =>
+            moveCardCanvas({ card_id: cardId, x_position: x, y_position: y, list_id: null })
+          }
+          onMoveListCanvas={(listId, x, y) => moveListCanvas({ listId, x, y })}
+          onCreateList={createList}
+          onUpdateListTitle={(listId, title) => updateList({ listId, title })}
+          onDeleteList={deleteList}
+        />
+      </div>
 
       <CardDetailModal
         boardId={boardId!}

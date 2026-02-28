@@ -2,7 +2,7 @@ import { Router } from 'express';
 import { authMiddleware } from '../middleware/auth.js';
 import { requireBoardAccess, BoardRequest } from '../middleware/boardAccess.js';
 import { validate } from '../middleware/validate.js';
-import { createListSchema, moveListSchema } from '@kanban/shared';
+import { createListSchema, moveListSchema, moveListCanvasSchema } from '@kanban/shared';
 import * as listService from '../services/listService.js';
 
 const router = Router();
@@ -31,6 +31,16 @@ router.patch('/:listId', authMiddleware, async (req: BoardRequest, res, next) =>
 router.patch('/:listId/move', authMiddleware, async (req: BoardRequest, res, next) => {
   try {
     const list = await listService.moveList(req.params.listId, req.body.position);
+    res.json({ data: list });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// Move list on canvas
+router.post('/:listId/move-canvas', authMiddleware, async (req: BoardRequest, res, next) => {
+  try {
+    const list = await listService.moveListCanvas(req.params.listId, req.body.x_position, req.body.y_position);
     res.json({ data: list });
   } catch (err) {
     next(err);

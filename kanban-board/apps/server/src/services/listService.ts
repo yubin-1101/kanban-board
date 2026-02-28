@@ -46,6 +46,18 @@ export async function moveList(listId: string, position: number) {
   return data;
 }
 
+export async function moveListCanvas(listId: string, xPosition: number, yPosition: number) {
+  const { data, error } = await supabaseAdmin
+    .from('lists')
+    .update({ x_position: xPosition, y_position: yPosition, updated_at: new Date().toISOString() })
+    .eq('id', listId)
+    .select()
+    .single();
+
+  if (error) throw error;
+  return data;
+}
+
 export async function deleteList(listId: string) {
   const { error } = await supabaseAdmin.from('lists').delete().eq('id', listId);
   if (error) throw error;

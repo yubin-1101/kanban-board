@@ -16,6 +16,7 @@ import {
 import { addAssignee, removeAssignee } from '../../services/assigneeApi';
 import Modal from '../ui/Modal';
 import Button from '../ui/Button';
+import DrawingCanvas from '../drawing/DrawingCanvas';
 import toast from 'react-hot-toast';
 import type { Comment, Label, BoardMember } from '@kanban/shared';
 
@@ -46,6 +47,7 @@ export default function CardDetailModal({ boardId, boardMembers = [], boardLabel
   const [newItemTexts, setNewItemTexts] = useState<Record<string, string>>({});
   const [newLabelName, setNewLabelName] = useState('');
   const [newLabelColor, setNewLabelColor] = useState(LABEL_COLORS[0]);
+  const [showSketch, setShowSketch] = useState(false);
 
   const { data: card } = useQuery({
     queryKey: ['card', selectedCardId],
@@ -259,6 +261,25 @@ export default function CardDetailModal({ boardId, boardMembers = [], boardLabel
                   year: 'numeric', month: 'long', day: 'numeric',
                 })}
               </p>
+            </div>
+          )}
+
+          {/* Sketch */}
+          {showSketch && (
+            <div>
+              <div className="flex items-center justify-between mb-2">
+                <h4 className="text-xs font-semibold text-ink-tertiary uppercase">스케치</h4>
+                <button
+                  className="text-xs text-ink-tertiary hover:text-red-500 transition-colors"
+                  onClick={() => setShowSketch(false)}
+                >
+                  닫기
+                </button>
+              </div>
+              <DrawingCanvas
+                className="border border-surface-border rounded-xl overflow-hidden"
+                height={300}
+              />
             </div>
           )}
 
@@ -605,6 +626,7 @@ export default function CardDetailModal({ boardId, boardMembers = [], boardLabel
             >
               체크리스트
             </button>
+
             {showAddChecklist && (
               <div className="absolute right-0 top-10 bg-surface-card rounded-xl shadow-raised border border-surface-border p-3 z-20 w-56 dropdown-panel">
                 <input
@@ -629,6 +651,18 @@ export default function CardDetailModal({ boardId, boardMembers = [], boardLabel
               </div>
             )}
           </div>
+
+          {/* Sketch */}
+          <button
+            className={`w-full text-left text-sm rounded-xl px-3 py-2 transition-colors ${
+              showSketch
+                ? 'bg-accent-50 text-accent-600 ring-1 ring-accent-200'
+                : 'bg-surface-raised hover:bg-zinc-200 text-ink-secondary'
+            }`}
+            onClick={() => setShowSketch(!showSketch)}
+          >
+            스케치
+          </button>
         </div>
       </div>
     </Modal>

@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { authMiddleware, AuthRequest } from '../middleware/auth.js';
 import { validate } from '../middleware/validate.js';
-import { createCardSchema, updateCardSchema, moveCardSchema } from '@kanban/shared';
+import { createCardSchema, updateCardSchema, moveCardSchema, moveCardCanvasSchema } from '@kanban/shared';
 import * as cardService from '../services/cardService.js';
 
 const router = Router();
@@ -19,7 +19,14 @@ router.get('/:cardId', authMiddleware, async (req: AuthRequest, res, next) => {
 // Create card
 router.post('/', authMiddleware, validate(createCardSchema), async (req: AuthRequest, res, next) => {
   try {
-    const card = await cardService.createCard(req.body.list_id, req.body.title, req.userId!);
+    const card = await cardService.createCard(
+      req.body.board_id,
+      req.body.title,
+      req.userId!,
+      req.body.list_id,
+      req.body.x_position,
+      req.body.y_position,
+    );
     res.status(201).json({ data: card });
   } catch (err) {
     next(err);
@@ -40,6 +47,21 @@ router.patch('/:cardId', authMiddleware, validate(updateCardSchema), async (req:
 router.post('/move', authMiddleware, validate(moveCardSchema), async (req: AuthRequest, res, next) => {
   try {
     const card = await cardService.moveCard(req.body.card_id, req.body.target_list_id, req.body.position);
+    res.json({ data: card });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// Move card on canvas
+router.post('/move-canvas', authMiddleware, validate(moveCardCanvasSchema), async (req: AuthRequest, res, next) => {
+  try {
+    const card = await cardService.moveCardCanvas(
+      req.body.card_id,
+      req.body.x_position,
+      req.body.y_position,
+      req.body.list_id,
+    );
     res.json({ data: card });
   } catch (err) {
     next(err);

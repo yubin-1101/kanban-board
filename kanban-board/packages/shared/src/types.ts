@@ -31,16 +31,21 @@ export interface List {
   board_id: string;
   title: string;
   position: number;
+  x_position: number;
+  y_position: number;
   created_at: string;
   updated_at: string;
 }
 
 export interface Card {
   id: string;
-  list_id: string;
+  list_id: string | null;
+  board_id: string;
   title: string;
   description: string | null;
   position: number;
+  x_position: number | null;
+  y_position: number | null;
   due_date: string | null;
   created_by: string;
   created_at: string;
@@ -154,6 +159,7 @@ export interface BoardWithMembers extends Board {
 
 export interface BoardDetail extends Board {
   lists: ListWithCards[];
+  free_cards: Card[];
   board_members: BoardMember[];
   labels: Label[];
 }

@@ -6,7 +6,8 @@
       "Bash(cd \"C:/Users/20201/Desktop/개발문서프젝/kanban-board\" && pnpm --filter @kanban/server typecheck 2>&1)",
       "Bash(cd \"C:/Users/20201/Desktop/개발문서프젝/kanban-board\" && pnpm --filter @kanban/client typecheck 2>&1)",
       "Bash(grep:*)",
-      "mcp__ide__getDiagnostics"
+      "mcp__ide__getDiagnostics",
+      "Bash(npx tsc:*)"
     ]
   }
 }

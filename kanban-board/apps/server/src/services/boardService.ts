@@ -21,13 +21,18 @@ export async function getBoardDetail(boardId: string) {
 
   if (boardError) throw boardError;
 
-  const [listsResult, membersResult, labelsResult] = await Promise.all([
+  const [listsResult, freeCardsResult, membersResult, labelsResult] = await Promise.all([
     supabaseAdmin
       .from('lists')
       .select('*, cards(*, card_labels(*, labels(*)), card_assignees(*, profiles(*)))')
       .eq('board_id', boardId)
       .order('position')
       .order('position', { referencedTable: 'cards' }),
+    supabaseAdmin
+      .from('cards')
+      .select('*, card_labels(*, labels(*)), card_assignees(*, profiles(*))')
+      .eq('board_id', boardId)
+      .is('list_id', null),
     supabaseAdmin
       .from('board_members')
       .select('*, profiles(*)')
@@ -43,6 +48,7 @@ export async function getBoardDetail(boardId: string) {
   return {
     ...board,
     lists: listsResult.data ?? [],
+    free_cards: freeCardsResult.data ?? [],
     board_members: membersResult.data ?? [],
     labels: labelsResult.data ?? [],
   };

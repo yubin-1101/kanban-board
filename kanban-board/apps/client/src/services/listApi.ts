@@ -16,6 +16,11 @@ export async function moveList(listId: string, position: number): Promise<List> 
   return data.data;
 }
 
+export async function moveListCanvas(listId: string, x: number, y: number): Promise<List> {
+  const { data } = await api.post(`/lists/${listId}/move-canvas`, { x_position: x, y_position: y });
+  return data.data;
+}
+
 export async function deleteList(listId: string): Promise<void> {
   await api.delete(`/lists/${listId}`);
 }

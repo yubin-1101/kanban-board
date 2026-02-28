@@ -25,15 +25,20 @@ export const updateListSchema = z.object({
 // Card schemas
 export const createCardSchema = z.object({
   title: z.string().min(1, '카드 제목을 입력해주세요').max(500),
-  list_id: z.string().uuid(),
+  board_id: z.string().uuid(),
+  list_id: z.string().uuid().nullable().optional(),
+  x_position: z.number().optional(),
+  y_position: z.number().optional(),
 });
 
 export const updateCardSchema = z.object({
   title: z.string().min(1).max(500).optional(),
   description: z.string().max(10000).nullable().optional(),
   position: z.number().optional(),
-  list_id: z.string().uuid().optional(),
+  list_id: z.string().uuid().nullable().optional(),
   due_date: z.string().nullable().optional(),
+  x_position: z.number().nullable().optional(),
+  y_position: z.number().nullable().optional(),
 });
 
 // Move schemas (for DnD)
@@ -46,6 +51,20 @@ export const moveCardSchema = z.object({
 export const moveListSchema = z.object({
   list_id: z.string().uuid(),
   position: z.number(),
+});
+
+// Canvas move schemas
+export const moveCardCanvasSchema = z.object({
+  card_id: z.string().uuid(),
+  x_position: z.number(),
+  y_position: z.number(),
+  list_id: z.string().uuid().nullable(),
+});
+
+export const moveListCanvasSchema = z.object({
+  list_id: z.string().uuid(),
+  x_position: z.number(),
+  y_position: z.number(),
 });
 
 // Member schemas
@@ -107,6 +126,8 @@ export type CreateCardInput = z.infer<typeof createCardSchema>;
 export type UpdateCardInput = z.infer<typeof updateCardSchema>;
 export type MoveCardInput = z.infer<typeof moveCardSchema>;
 export type MoveListInput = z.infer<typeof moveListSchema>;
+export type MoveCardCanvasInput = z.infer<typeof moveCardCanvasSchema>;
+export type MoveListCanvasInput = z.infer<typeof moveListCanvasSchema>;
 export type InviteMemberInput = z.infer<typeof inviteMemberSchema>;
 export type UpdateMemberRoleInput = z.infer<typeof updateMemberRoleSchema>;
 export type CreateCommentInput = z.infer<typeof createCommentSchema>;
