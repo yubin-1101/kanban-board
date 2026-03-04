@@ -5,6 +5,8 @@ import DrawingCanvas, { type DrawingCanvasHandle } from '../drawing/DrawingCanva
 import CanvasToolbar from './CanvasToolbar';
 import PostItCard from './PostItCard';
 import CanvasListGroup from './CanvasListGroup';
+import RemoteCursors from './RemoteCursors';
+import type { RemoteCursorData } from '../../hooks/useRealtimePresence';
 import type { BoardDetail, Card, ListWithCards } from '@kanban/shared';
 
 interface CanvasBoardProps {
@@ -17,6 +19,8 @@ interface CanvasBoardProps {
   onCreateList: (title: string) => void;
   onUpdateListTitle: (listId: string, title: string) => void;
   onDeleteList: (listId: string) => void;
+  remoteCursors: Map<string, RemoteCursorData>;
+  broadcastCursor: (x: number | null, y: number | null) => void;
 }
 
 export default function CanvasBoard({
@@ -29,6 +33,8 @@ export default function CanvasBoard({
   onCreateList,
   onUpdateListTitle,
   onDeleteList,
+  remoteCursors,
+  broadcastCursor,
 }: CanvasBoardProps) {
   const drawingRef = useRef<DrawingCanvasHandle>(null);
   const { toolMode } = useCanvasStore();
@@ -95,8 +101,27 @@ export default function CanvasBoard({
 
   const isDrawing = toolMode === 'pen' || toolMode === 'eraser';
 
+  const handlePointerMove = useCallback(
+    (e: React.PointerEvent<HTMLDivElement>) => {
+      const rect = e.currentTarget.getBoundingClientRect();
+      broadcastCursor(
+        e.clientX - rect.left + e.currentTarget.scrollLeft,
+        e.clientY - rect.top + e.currentTarget.scrollTop,
+      );
+    },
+    [broadcastCursor],
+  );
+
+  const handlePointerLeave = useCallback(() => {
+    broadcastCursor(null, null);
+  }, [broadcastCursor]);
+
   return (
-    <div className="relative w-full h-full overflow-auto">
+    <div
+      className="relative w-full h-full overflow-auto"
+      onPointerMove={handlePointerMove}
+      onPointerLeave={handlePointerLeave}
+    >
       {/* z-10: Drawing canvas background */}
       <div className="absolute inset-0 z-10" style={{ pointerEvents: isDrawing ? 'auto' : 'none' }}>
         <DrawingCanvas
@@ -111,6 +136,11 @@ export default function CanvasBoard({
           onUndoStroke={onUndoStroke}
           onClearStrokes={onClearStrokes}
         />
+      </div>
+
+      {/* z-[15]: Remote cursors layer */}
+      <div className="absolute inset-0 z-[15] pointer-events-none">
+        <RemoteCursors remoteCursors={remoteCursors} />
       </div>
 
       {/* z-20: Cards and lists layer */}

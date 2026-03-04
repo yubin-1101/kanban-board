@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useBoard } from '../hooks/useBoard';
 import { useRealtimeBoard } from '../hooks/useRealtimeBoard';
+import { useRealtimePresence } from '../hooks/useRealtimePresence';
 import { boardGradient } from '../lib/utils';
 import CanvasBoard from '../components/canvas/CanvasBoard';
 import CardDetailModal from '../components/card/CardDetailModal';
@@ -27,6 +28,7 @@ export default function BoardPage() {
   } = useBoard(boardId!);
 
   useRealtimeBoard(boardId);
+  const { onlineUserIds, remoteCursors, broadcastCursor } = useRealtimePresence(boardId!);
 
   if (isLoading) {
     return (
@@ -84,10 +86,13 @@ export default function BoardPage() {
             {board.board_members.slice(0, 4).map((m) => (
               <div
                 key={m.id}
-                className="w-7 h-7 rounded-full bg-white/20 backdrop-blur-sm border-[1.5px] border-white/25 flex items-center justify-center text-white text-[10px] font-bold ring-2 ring-transparent hover:ring-white/20 transition-all"
+                className="relative w-7 h-7 rounded-full bg-white/20 backdrop-blur-sm border-[1.5px] border-white/25 flex items-center justify-center text-white text-[10px] font-bold ring-2 ring-transparent hover:ring-white/20 transition-all"
                 title={m.profile?.display_name}
               >
                 {m.profile?.display_name?.[0]?.toUpperCase() || '?'}
+                {onlineUserIds.has(m.user_id) && (
+                  <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-green-400 rounded-full border-[1.5px] border-white/30" />
+                )}
               </div>
             ))}
             {board.board_members.length > 4 && (
@@ -122,6 +127,8 @@ export default function BoardPage() {
           onCreateList={createList}
           onUpdateListTitle={(listId, title) => updateList({ listId, title })}
           onDeleteList={deleteList}
+          remoteCursors={remoteCursors}
+          broadcastCursor={broadcastCursor}
         />
       </div>
 
