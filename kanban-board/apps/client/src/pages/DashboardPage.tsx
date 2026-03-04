@@ -7,6 +7,7 @@ import { getReceivedInvitations, respondToInvitation } from '../services/memberA
 import { getReceivedRequests } from '../services/friendApi';
 import { avatarGradient, boardGradient } from '../lib/utils';
 import { useRealtimeFriends } from '../hooks/useRealtimeFriends';
+import { useRealtimeDashboard } from '../hooks/useRealtimeDashboard';
 import Button from '../components/ui/Button';
 import Modal from '../components/ui/Modal';
 import Input from '../components/ui/Input';
@@ -29,6 +30,7 @@ export default function DashboardPage() {
   const [showFriends, setShowFriends] = useState(false);
 
   useRealtimeFriends();
+  useRealtimeDashboard();
 
   const { data: boards = [], isLoading } = useQuery({
     queryKey: ['boards'],

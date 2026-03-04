@@ -47,6 +47,7 @@ export default function MemberPanel({ boardId, members, isOpen, onClose }: Membe
     mutationFn: (email: string) => inviteMember(boardId, email, role),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['boardInvitations', 'sent', boardId] });
+      queryClient.invalidateQueries({ queryKey: ['board', boardId] });
       toast.success('초대를 보냈습니다');
     },
     onError: (err: any) => {

@@ -46,6 +46,30 @@ export function useRealtimeBoard(boardId: string | undefined) {
           queryClient.invalidateQueries({ queryKey: ['board', boardId] });
         },
       )
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'board_members',
+          filter: `board_id=eq.${boardId}`,
+        },
+        () => {
+          queryClient.invalidateQueries({ queryKey: ['board', boardId] });
+        },
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'board_invitations',
+          filter: `board_id=eq.${boardId}`,
+        },
+        () => {
+          queryClient.invalidateQueries({ queryKey: ['boardInvitations', 'sent', boardId] });
+        },
+      )
       .subscribe();
 
     channelRef.current = channel;
